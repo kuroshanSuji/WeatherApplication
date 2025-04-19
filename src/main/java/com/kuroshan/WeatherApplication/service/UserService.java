@@ -24,6 +24,9 @@ public class UserService {
     private String key;
     @Autowired
     private RestTemplate restTemplate;
+    @Autowired
+    private GettingForeCastService gettingForeCastService;
+
     public void getGeoLocatio(String location) // orginal
     {
         StringBuilder finalUrl=new StringBuilder(url);
@@ -68,7 +71,8 @@ public class UserService {
         finalUrl.append(key);
         HttpEntity<Object> httpEntity = new HttpEntity<>(gethttpHeaders());
         String url = finalUrl.toString();
-        Object JsonResponse;
+        String lat="";
+        String lon = "";
         ResponseEntity<List<JsonResponse>> response= restTemplate.exchange(url, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<JsonResponse>>() {});
         List<JsonResponse> city=response.getBody();
         if(! city.isEmpty())
@@ -76,6 +80,8 @@ public class UserService {
             for(JsonResponse jsonResponse:city)
             {
                 log.info(jsonResponse.getName());
+                lat= jsonResponse.getLatitude();
+                lat= jsonResponse.getLongitude();
                 Map<String, String> localNames = jsonResponse.getLocalName(); // Get the local names map
                 if (localNames != null && !localNames.isEmpty()) {
                     System.out.println("Local Names:");
@@ -87,6 +93,11 @@ public class UserService {
                 }
             }
         }
+        // here we have received lat and long , now with this we need to make an api to get today's weather forecast
+        // using lat ,long , current date in formate of 2020-03-04
+        //https://api.openweathermap.org/data/3.0/onecall/day_summary?lat=39.099724&lon=-94.578331&date=2020-03-04&appid={API key}
+        gettingForeCastService.hitForeCastApi(lat,lon);
+
     }
     private HttpHeaders gethttpHeaders(){
         HttpHeaders headers = new HttpHeaders();
